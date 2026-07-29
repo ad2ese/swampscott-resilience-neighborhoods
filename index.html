@@ -85,6 +85,30 @@
     }
     .swatch.ej { background: rgba(234,179,8,.28); border: 2px solid #7c2d12; }
     .swatch.boundary { border: 2px solid #18222f; background: rgba(255,255,255,.3); }
+    .precinct-key {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px;
+      margin-top: 9px;
+      padding-top: 9px;
+      border-top: 1px solid rgba(24,34,47,.12);
+    }
+    .precinct-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      min-width: 0;
+      color: #253545;
+      font-weight: 800;
+      font-size: .72rem;
+    }
+    .precinct-chip span {
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+      border: 1px solid rgba(24,34,47,.2);
+      flex: 0 0 auto;
+    }
     .count-label {
       width: 34px !important;
       height: 34px !important;
@@ -117,12 +141,12 @@
       height: 22px;
       padding: 0 6px;
       border-radius: 4px;
-      background: rgba(255,255,255,.92);
+      background: rgba(255,255,255,.96);
       border: 2px solid currentColor;
       color: #24486c;
-      font-size: .68rem;
+      font-size: .72rem;
       font-weight: 800;
-      box-shadow: 0 3px 10px rgba(24,34,47,.16);
+      box-shadow: 0 4px 12px rgba(24,34,47,.22);
     }
     .side {
       padding: 24px;
@@ -308,6 +332,14 @@
         <strong>Map Reading Guide</strong>
         <div class="legend-row"><span class="swatch survey"></span><span>Survey-mentioned area; number is response count.</span></div>
         <div class="legend-row"><span class="swatch precinct"></span><span>Color-filled 2022 Swampscott voting precinct.</span></div>
+        <div class="precinct-key" aria-label="Precinct color key">
+          <div class="precinct-chip"><span style="background:#2563eb"></span>P1</div>
+          <div class="precinct-chip"><span style="background:#16a34a"></span>P2</div>
+          <div class="precinct-chip"><span style="background:#dc2626"></span>P3</div>
+          <div class="precinct-chip"><span style="background:#9333ea"></span>P4</div>
+          <div class="precinct-chip"><span style="background:#ea580c"></span>P5</div>
+          <div class="precinct-chip"><span style="background:#0891b2"></span>P6</div>
+        </div>
         <div class="legend-row"><span class="swatch ej"></span><span>2020 MA Environmental Justice block group.</span></div>
         <div class="legend-row"><span class="swatch gap"></span><span>Outreach check: named public place with little/no direct survey signal.</span></div>
         <div class="legend-row"><span class="swatch boundary"></span><span>Town boundary from MassGIS.</span></div>
@@ -866,7 +898,7 @@
         weight: 0.8,
         opacity: 0.55,
         fillColor: precinctColor(feature),
-        fillOpacity: 0.13
+        fillOpacity: 0.22
       }),
       onEachFeature: (feature, layer) => {
         const p = feature.properties || {};
