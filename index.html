@@ -79,7 +79,10 @@
     .swatch { width: 20px; height: 12px; border-radius: 3px; display: inline-block; }
     .swatch.survey { background: rgba(8,127,140,.42); border: 2px solid #087f8c; }
     .swatch.gap { background: rgba(255,255,255,.25); border: 2px dashed #8f6b00; }
-    .swatch.precinct { background: rgba(255,255,255,.25); border: 2px solid #315f88; }
+    .swatch.precinct {
+      background: linear-gradient(90deg, #2563eb, #16a34a, #dc2626, #9333ea, #ea580c, #0891b2);
+      border: 2px solid #18222f;
+    }
     .swatch.ej { background: rgba(234,179,8,.28); border: 2px solid #7c2d12; }
     .swatch.boundary { border: 2px solid #18222f; background: rgba(255,255,255,.3); }
     .count-label {
@@ -115,7 +118,7 @@
       padding: 0 6px;
       border-radius: 4px;
       background: rgba(255,255,255,.92);
-      border: 1px solid #315f88;
+      border: 2px solid currentColor;
       color: #24486c;
       font-size: .68rem;
       font-weight: 800;
@@ -304,7 +307,7 @@
       <div class="legend">
         <strong>Map Reading Guide</strong>
         <div class="legend-row"><span class="swatch survey"></span><span>Survey-mentioned area; number is response count.</span></div>
-        <div class="legend-row"><span class="swatch precinct"></span><span>2022 Swampscott voting precinct line.</span></div>
+        <div class="legend-row"><span class="swatch precinct"></span><span>Color-filled 2022 Swampscott voting precinct.</span></div>
         <div class="legend-row"><span class="swatch ej"></span><span>2020 MA Environmental Justice block group.</span></div>
         <div class="legend-row"><span class="swatch gap"></span><span>Outreach check: named public place with little/no direct survey signal.</span></div>
         <div class="legend-row"><span class="swatch boundary"></span><span>Town boundary from MassGIS.</span></div>
@@ -795,10 +798,12 @@
 
     map.createPane('ejPane');
     map.getPane('ejPane').style.zIndex = 360;
+    map.createPane('precinctFillPane');
+    map.getPane('precinctFillPane').style.zIndex = 390;
     map.createPane('surveyPane');
     map.getPane('surveyPane').style.zIndex = 430;
     map.createPane('linePane');
-    map.getPane('linePane').style.zIndex = 460;
+    map.getPane('linePane').style.zIndex = 470;
 
     const escapeText = value => String(value ?? '').replace(/[&<>"']/g, char => ({
       '&': '&amp;',
@@ -815,6 +820,15 @@
       }
       return `$${Number(value).toLocaleString()}`;
     }
+    const precinctColors = {
+      '1': '#2563eb',
+      '2': '#16a34a',
+      '3': '#dc2626',
+      '4': '#9333ea',
+      '5': '#ea580c',
+      '6': '#0891b2'
+    };
+    const precinctColor = feature => precinctColors[String(feature.properties?.precinct || '')] || '#315f88';
 
     const metersToLat = meters => meters / 111320;
     const metersToLng = (meters, lat) => meters / (111320 * Math.cos(lat * Math.PI / 180));
@@ -845,15 +859,29 @@
     }).addTo(map);
     map.fitBounds(boundaryLayer.getBounds(), { padding: [20, 20] });
 
+    const precinctFills = L.geoJSON(DATA.precincts, {
+      pane: 'precinctFillPane',
+      style: feature => ({
+        color: precinctColor(feature),
+        weight: 0.8,
+        opacity: 0.55,
+        fillColor: precinctColor(feature),
+        fillOpacity: 0.13
+      }),
+      onEachFeature: (feature, layer) => {
+        const p = feature.properties || {};
+        const name = escapeText(p.name || `Swampscott Precinct ${p.precinct || ''}`);
+        layer.bindPopup(`<strong>${name}</strong><br>2020 population: ${formatNumber(p.pop)}`);
+      }
+    });
     const precinctLines = L.geoJSON(DATA.precincts, {
       pane: 'linePane',
-      style: {
-        color: '#315f88',
-        weight: 2,
-        opacity: 0.9,
+      style: feature => ({
+        color: precinctColor(feature),
+        weight: 3.2,
+        opacity: 0.96,
         fillOpacity: 0,
-        dashArray: '7 5'
-      },
+      }),
       onEachFeature: (feature, layer) => {
         const p = feature.properties || {};
         const name = escapeText(p.name || `Swampscott Precinct ${p.precinct || ''}`);
@@ -868,11 +896,11 @@
         interactive: false,
         icon: L.divIcon({
           className: 'precinct-label',
-          html: `<span>P${escapeText(p.precinct || '')}</span>`
+          html: `<span style="color:${precinctColors[String(p.precinct || '')] || '#315f88'}">P${escapeText(p.precinct || '')}</span>`
         })
       }).addTo(precinctLabels);
     });
-    const precinctLayer = L.layerGroup([precinctLines, precinctLabels]).addTo(map);
+    const precinctLayer = L.layerGroup([precinctFills, precinctLines, precinctLabels]).addTo(map);
 
     const ejLayer = L.geoJSON(DATA.ejAreas, {
       pane: 'ejPane',
